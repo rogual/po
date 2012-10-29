@@ -1,0 +1,32 @@
+DEPENDENCIES
+
+Two kinds:
+    Install-time: Package A is required in order to install Package B.
+    Run-time: Package A is required for Package B to work.
+
+Packges can implement interfaces. For example, the MSVC compiler interface
+is implemented by MSVC and Clang.
+    
+> po interface msvc
+Microsoft Visual C++-compatible compiler
+Implemented by:
+    Microsoft Visual C++
+
+Tasks:
+    - Find packages that implement an interface
+    - Declare an implementation
+
+p = Package(msvc...)
+
+def install(pkg):
+    compiler = msvc.interface.require()
+    compiler.cl('thing.c')
+
+
+--- msvc recipe
+
+interface = package.interface('Microsoft Visual C++-compatible compiler')
+
+@interface.finder(msvc_project)
+def find():
+    return pkgs
