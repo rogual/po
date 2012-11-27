@@ -31,3 +31,10 @@ def lib(package):
     loc  = package[standard.a_location]
     base = join(loc, 'contrib', 'vstudio', 'vc10', 'x86')
     return [join(base, 'ZlibDllRelease'), join(base, 'ZlibStatRelease')]
+
+
+@environment.executables.implement(recipe)
+def lib(package):
+    loc  = package[standard.a_location]
+    base = join(loc, 'contrib', 'vstudio', 'vc10', 'x86')
+    return [join(base, 'ZlibDllRelease'), join(base, 'ZlibStatRelease')]

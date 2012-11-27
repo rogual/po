@@ -1,4 +1,3 @@
-from command import command
 
 repositories = []
 
@@ -7,27 +6,13 @@ class Repository:
         pass
 
 
-@command()
-def inventory(args):
-    """List installed packages.
-
-    Options:
-        -m   Print project IDs and attributes. 
-    """
-    if '-m' in args:
-        for package in get_packages():
-            print package
-    else:
-        for package in get_packages():
-            print package.project.name
-
-
-def register(id, name, get_packages):
+def register(id, name, get_packages, find_installed_packages):
     """Create and register a repository."""
     repo = Repository()
     repo.id = id
     repo.name = name
     repo.get_packages = get_packages
+    repo.find_installed_packages = find_installed_packages
     repositories.append(repo)
 
 
@@ -39,10 +24,19 @@ def get_packages():
     return packages
 
 
-def get_list(interface):
-    result = []
-    for package in get_packages():
-        result.extend(interface(package))
-    return result
+def get_packages_with_repos():
+    packages = []
+    for repo in repositories:
+        for package in repo.get_packages():
+            packages.append((repo, package))
+    return packages
+
+
+def find_installed_packages(specifier):
+    for repo in repositories:
+        for package in repo.find_installed_packages(specifier):
+            yield package
+
+
 
 

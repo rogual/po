@@ -4,12 +4,32 @@ import _winreg as winreg
 import system
 import package
 import project
+import standard
+import attributes
 import environment
 
 recipe = project.Project('msvs', "Microsoft Visual Studio")
 
-a_version = package.attribute('msvs.version', 'Version')
-a_location = package.attribute('msvs.location', 'Location')
+a_version = attributes.a_version
+a_location = attributes.a_location
+
+downloads = {
+    '9.0': 'http://www.microsoft.com/en-gb/download/details.aspx?id=3D20682'
+}
+
+@standard.factory.implement(recipe)
+def factory(project, specifier):
+    version = specifier.get(a_version, max(downloads.keys()))
+    pkg = package.Package(recipe, {a_version: version})
+    if specifier.match(pkg):
+        return pkg
+
+
+@standard.installer.implement(recipe)
+def install(package):
+    print 'install MSVC', package[a_version]
+    raise Exception
+
 
 @system.scan.implement(recipe)
 def scan(project):
@@ -49,10 +69,13 @@ def get_installations():
             i += 1
 
             try:
-                sub = '\\'.join((version, 'Setup', 'VS'))
+                sub = '\\'.join((version, 'Setup'))
                 with winreg.OpenKey(key, sub) as subkey:
-                    path, type = winreg.QueryValueEx(subkey, "ProductDir")
-                    versions.append((version, path))
+                    path, type = winreg.QueryValueEx(subkey, "Dbghelp_path")
+                    suff = 'Common7\\IDE\\'
+                    if path.endswith(suff):
+                        path = path[:-len(suff)]
+                        versions.append((version, path))
             except WindowsError:
                 continue
     finally:

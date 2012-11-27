@@ -58,11 +58,11 @@ def simple(id, name, url, prefix=None):
     return recipe
 
 
-def source(id, name, url):
+def source(id, name, url=None, prefix=None):
     """Shortcut for defining source packages. These packages contain source
     code that needs to be compiled."""
 
-    project = simple(id, name, url)
+    project = simple(id, name, url, prefix)
 
     @standard.factory.implement(project)
     def factory(project, specifier):
@@ -88,7 +88,8 @@ def source(id, name, url):
 
     @standard.installer.implement(project)
     def install(package):
-        download_and_extract(url, package)
+        if url:
+            download_and_extract(url, package, prefix)
         install_fn[0](package)
 
     def deco(fn):
@@ -109,7 +110,9 @@ def download_and_extract(url, package, prefix=None):
         download.download(url, path)
 
     dest = package[standard.a_location]
+
     if exists(dest):
+        print 'DEBUG'; return dest
         print 'Removing old files...'
         util.rmtree(dest)
 

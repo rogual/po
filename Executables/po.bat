@@ -1,6 +1,5 @@
-@echo off
-c:\python27\python.exe "%~f0\..\..\Scripts\main.py" %*
-if not exist ..\State\exit.bat goto end
-..\state\exit.bat
-del ..\state\exit.bat
-:end
+@rem Running this file enables the po command.
+@doskey po=C:\Python27\python.exe ^
+        "Packages\Package Manager\Scripts\main.py" $* ^& ^
+        "Packages\Package Manager\State\exit.bat"
+@echo Po is ready to use.

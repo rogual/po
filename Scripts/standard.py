@@ -6,12 +6,14 @@ from os import makedirs
 from collections import defaultdict
 
 import repository
+import attributes
+import catalogue
 import download
 import package
-import recipe
 import project
+import select
+import recipe
 import paths
-import pickle
 import util
 
 
@@ -25,7 +27,8 @@ installer = project.interface()
 uninstaller = project.interface()
 
 
-a_location = package.attribute('location', 'Location')
+# These attributes are now common
+a_location = attributes.a_location
 
 
 @package.command()
@@ -58,9 +61,13 @@ def install(package_specifier):
     installer(package)
 
     # Update database.
-    catalogue = read_catalogue()
-    catalogue[package.project.id].append(package)
-    write_catalogue(catalogue)
+    with catalogue.modify(catalogue_path) as cat:
+        cat[package.project.id].append(package)
+
+    # If no packages from this project are already selected, select this one.
+    selected = select.get_selected_packages()
+    if not any(p for p in selected if p.project.id == project_id):
+        select.select_package(package)
 
 
 @package.command()
@@ -68,54 +75,32 @@ def uninstall(package_specifier):
     """Uninstall a package."""
     packages = find_installed_packages(package_specifier)
     if packages:
-        catalogue = read_catalogue()
+        cat = catalogue.read(catalogue_path)
         for package in packages:
+            select.deselect_package(package)
             uninstaller(package)
-            catalogue[package.project.id].remove(package)
-        write_catalogue(catalogue)
+            cat[package.project.id].remove(package)
+        catalogue.write(catalogue_path, cat)
     else:
         return error("Not installed.")
 
 
-def dump_package(package):
-    return (package.project.id, package.attributes)
-
-def load_package(blob):
-    return package.Package(recipe.get_project(blob[0]), blob[1])
-
 def find_installed_packages(package_specifier):
     r = []
-    catalogue = read_catalogue()
-    for package in catalogue[package_specifier.project]:
+    cat = catalogue.read(catalogue_path)
+    for package in cat[package_specifier.project]:
         if package_specifier.match(package):
             r.append(package)
     return r
 
+
 def get_packages():
     r = []
-    catalogue = read_catalogue()
-    for project, packages in catalogue.items():
+    cat = catalogue.read(catalogue_path)
+    for project, packages in cat.items():
         r.extend(packages)
     return r
 
-
-
-def read_catalogue():
-    r = defaultdict(list)
-    if exists(catalogue_path):
-        with open(catalogue_path, 'rb') as catalogue_file:
-            for blob in pickle.load(catalogue_file):
-                package = load_package(blob)
-                r[package.project.id].append(package)
-    return r
-
-
-def write_catalogue(catalogue):
-    blobs = []
-    for packages in catalogue.values():
-        blobs.extend(map(dump_package, packages))
-    with open(catalogue_path, 'wb') as catalogue_file:
-        pickle.dump(blobs, catalogue_file)
-
-
-repository.register('standard', 'Standard', get_packages)
+repository.register(
+    'standard', 'Standard', get_packages, find_installed_packages
+)

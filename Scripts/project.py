@@ -4,9 +4,16 @@ import package
 
 
 class Project:
-    def __init__(self, id, name):
+    def __init__(self, id, name, namespace=''):
         self.id = id
         self.name = name
+        self.namespace = namespace
+
+    @property
+    def qualified_id(self):
+        if self.namespace:
+            return ':'.join((self.namespace, self.id))
+        return self.id
 
 
 def nop(*a, **kw):
