@@ -1,14 +1,17 @@
-from os.path import join
+from os.path import join, normpath
 import os
+import contextlib
 
 from command import command
 
+import attributes
 import package
 import project
 import paths
 import select
 import util
 
+exit_path = join(paths.state, 'exit.bat')
 
 executables = project.interface(lambda pkg: [])
 initializers = project.interface(lambda pkg: [])
@@ -22,6 +25,37 @@ interface_vars = [
     (libraries, 'LIB'),
     (pythonpath, 'PYTHONPATH')
 ]
+
+
+def define_paths(project, paths):
+    """Helper function to define paths for a project."""
+    if isinstance(paths, dict):
+        paths = paths.items()
+
+    def loc(pkg):
+        return pkg[attributes.a_location]
+
+    for k, v in paths:
+        def doit(k, v):
+
+            if isinstance(v, basestring):
+                v = [v]
+
+            def get(pkg):
+                def to_path(x):
+                    return normpath(join(loc(pkg), x))
+                return map(to_path, v)
+
+            k.implement(project)(get)
+
+        doit(k, v)
+
+
+
+@command()
+def cmd_paths(args):
+    """Query environment variables."""
+    print os.environ[args or 'PATH'].replace(';', '\n')
 
 
 @command()
@@ -60,17 +94,19 @@ def load(args):
     reload()
 
 
+@contextlib.contextmanager
+def exit():
+    with open(exit_path, 'wt') as exit:
+        yield exit
+        # Have exit.bat blank itself after use
+        exit.write("@type nul > \"%~f0\"\n")
+
 def reload():
     # The po wrapper script executes exit.bat after every command, so we can
     # write to it to modify the calling environment.
     if 'PO_SUBSHELL' in os.environ:
-        exit_path = join(paths.state, 'exit.bat')
-        with open(exit_path, 'wt') as exit:
-            write_batch_file(exit)
-            
-            # Have exit.bat blank itself after use
-            exit.write("type nul > \"%~f0\"\n")
-
+        with exit() as f:
+            write_batch_file(f)
 
 def get_list(interface):
     result = []

@@ -9,6 +9,8 @@ def command(name=None):
     """Decorator for defining commands"""
     def deco(fn):
         fn.name = name or fn.__name__
+        if fn.name.startswith('cmd_'):
+            fn.name = fn.name[4:]
         commands[fn.name] = fn
         return fn
     return deco

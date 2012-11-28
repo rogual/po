@@ -70,6 +70,9 @@ class Specifier:
         self.arguments = arguments
         self.get = self.arguments.get
 
+    def __nonzero__(self):
+        return 1 if self.project or self.arguments else 0
+
     def match(self, package):
         if self.project != package.project.id:
             return False

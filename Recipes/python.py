@@ -6,11 +6,14 @@ import package
 import system
 import environment
 import repository
+import attributes
 
 recipe = project.Project('python', "Python")
 
 a_version = package.attribute('python.version', 'Version')
-a_location = package.attribute('python.location', 'Location')
+a_location = attributes.a_location
+
+ad_location = package.attribute('python.location', 'Location')
 
 
 @system.scan.implement(recipe)
@@ -18,7 +21,7 @@ def scan(project):
     for version, path in get_installations().items():
         pkg = package.Package(project, {
             a_version: version,
-            a_location: path
+            a_location: path,
         })
         yield pkg
 

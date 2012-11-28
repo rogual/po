@@ -5,6 +5,7 @@ from os.path import join, exists
 from os import makedirs
 from collections import defaultdict
 
+import environment
 import repository
 import attributes
 import catalogue

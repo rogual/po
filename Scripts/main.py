@@ -16,6 +16,7 @@ import standard
 import system
 import select
 import local
+import misc
 
 if __name__ == '__main__':
     sys.exit(command.run(sys.argv[1:]))
