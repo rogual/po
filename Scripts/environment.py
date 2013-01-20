@@ -51,7 +51,6 @@ def define_paths(project, paths):
         doit(k, v)
 
 
-
 @command()
 def cmd_paths(args):
     """Query environment variables."""
@@ -61,7 +60,7 @@ def cmd_paths(args):
 @command()
 def enter(args):
     """Enter the environment.
-    
+
     Starts a new sub-shell with environment variables provided by selected
     packages.
 
@@ -85,10 +84,10 @@ def enter(args):
 @command()
 def load(args):
     """Reload the environment.
-    
+
     Populate the current environment with variables provided by selected
     packages.
-    
+
     Like 'enter', but operates on the calling environment rather than starting
     a subshell."""
     reload()
@@ -101,12 +100,14 @@ def exit():
         # Have exit.bat blank itself after use
         exit.write("@type nul > \"%~f0\"\n")
 
+
 def reload():
     # The po wrapper script executes exit.bat after every command, so we can
     # write to it to modify the calling environment.
     if 'PO_SUBSHELL' in os.environ:
         with exit() as f:
             write_batch_file(f)
+
 
 def get_list(interface):
     result = []
@@ -120,6 +121,13 @@ def write_batch_file(batch):
     batch.write('prompt [P] $P$G\n')
     batch.write('SET PO_SUBSHELL=1\n')
 
+    for cmd in get_list(initializers):
+        if isinstance(cmd, basestring):
+            cmd = [cmd]
+
+        batch.write(' '.join(['call'] + map(quote, cmd)))
+        batch.write('\n')
+
     for interface, var in interface_vars:
         base = 'PO_BASE_' + var
 
@@ -130,13 +138,6 @@ def write_batch_file(batch):
         for path in get_list(interface):
             vars['path'] = path
             batch.write('SET {var}={path};%{var}%\n'.format(**vars))
-
-    for cmd in get_list(initializers):
-        if isinstance(cmd, basestring):
-            cmd = [cmd]
-
-        batch.write(' '.join(['call'] + map(quote, cmd)))
-        batch.write('\n')
 
 
 def quote(x):

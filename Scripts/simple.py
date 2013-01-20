@@ -58,7 +58,7 @@ def simple(id, name, url, prefix=None):
     return recipe
 
 
-def source(id, name, url=None, prefix=None):
+def source(id, name, url=None, prefix=None, configurations=None):
     """Shortcut for defining source packages. These packages contain source
     code that needs to be compiled."""
 
@@ -78,11 +78,19 @@ def source(id, name, url=None, prefix=None):
         if not compiler:
             compiler = compile.get_default_compiler()
 
-        return package.Package(project, {
+        attrs = {
             compile.a_format: format,
             compile.a_provenance: provenance,
             compile.a_compiler: compiler
-        })
+        }
+
+        if configurations:
+            cfg = specifier.get(compile.a_configuration)
+            if not cfg:
+                cfg = configurations[0]
+            attrs[compile.a_configuration] = cfg
+
+        return package.Package(project, attrs)
 
     install_fn = [lambda pkg: None]
 

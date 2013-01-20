@@ -6,9 +6,11 @@ import standard
 import environment
 import util
 
+
 hg_repo = 'http://crayzedsgui.hg.sourceforge.net/hgroot/crayzedsgui/cegui_mk2'
 
-@simple.source('cegui', "CEGUI")
+
+@simple.source('cegui', "CEGUI", configurations=['release', 'debug'])
 def recipe(package):
     path = package[standard.a_location]
     if exists(path):
@@ -16,7 +18,7 @@ def recipe(package):
         util.rmtree(path)
 
     util.run('hg clone %s "%s"' % (hg_repo, path))
-    
+
     build = join(path, 'build')
     if 0:
         if exists(build):
@@ -24,7 +26,17 @@ def recipe(package):
             util.rmtree(build)
         os.makedirs(build)
 
+    build = join(build, 'release')
+    if 0:
+        if exists(build):
+            print 'Removing build dir...'
+            util.rmtree(build)
+        os.makedirs(build)
+
+    config = package[standard.a_configuration].title()
+
     options = [
+        ('CEGUI_BUILD_TYPE', config),
         ('CEGUI_BUILD_XMLPARSER_TINYXML', '1'),
         ('CMAKE_INCLUDE_PATH', '%INCLUDE%'),
         ('CMAKE_LIBRARY_PATH', '%LIB%')
@@ -36,7 +48,11 @@ def recipe(package):
     util.run('nmake', cwd=build)
 
 environment.define_paths(recipe, {
-    environment.headers: ['cegui\\include'],
-    environment.libraries: ['build\\lib'],
-    environment.executables: ['build\\bin']
+    environment.headers: [
+        'cegui\\include',
+        'cegui\\include\\cegui',
+        'build\\debug\\cegui\\include',
+    ],
+    environment.libraries: ['build\\debug\\lib'],
+    environment.executables: ['build\\debug\\bin']
 })

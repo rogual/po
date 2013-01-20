@@ -17,6 +17,7 @@ downloads = {
     '9.0': 'http://www.microsoft.com/en-gb/download/details.aspx?id=3D20682'
 }
 
+
 @standard.factory.implement(recipe)
 def factory(project, specifier):
     version = specifier.get(a_version, max(downloads.keys()))
@@ -47,6 +48,16 @@ def init(package):
     return [join(package[a_location], 'VC', 'bin', 'vcvars32')]
 
 
+@environment.executables.implement(recipe)
+def find_executables(package):
+    return [join(path, 'bin') for version, path in get_ctps()]
+
+
+@environment.headers.implement(recipe)
+def find_headers(package):
+    return [join(path, 'include') for version, path in get_ctps()]
+
+
 def get_installations():
     """Returns a list of (version, path) pairs for VS installations."""
     try:
@@ -59,15 +70,7 @@ def get_installations():
 
     versions = []
     try:
-        i = 0
-        while True:
-            try:
-                version = winreg.EnumKey(key, i)
-            except WindowsError:
-                break
-
-            i += 1
-
+        for version in iterate_keys(key):
             try:
                 sub = '\\'.join((version, 'Setup'))
                 with winreg.OpenKey(key, sub) as subkey:
@@ -82,3 +85,43 @@ def get_installations():
         key.Close()
 
     return versions
+
+
+def get_ctps():
+    """Find all installed compiler updates."""
+    try:
+        key = winreg.OpenKey(
+            winreg.HKEY_LOCAL_MACHINE,
+            r'SOFTWARE\Wow6432Node\Microsoft\VisualStudio\SxS\VC_CTP'
+        )
+    except WindowsError:
+        return
+
+    try:
+        for version, path, type in iterate_values(key):
+            yield version, path
+
+    finally:
+        key.Close()
+
+
+def iterate_keys(key):
+    """Yields the name of each subkey in key"""
+    i = 0
+    while True:
+        try:
+            yield winreg.EnumKey(key, i)
+        except WindowsError:
+            break
+        i += 1
+
+
+def iterate_values(key):
+    """Yields (name, value, type) for each value in the key"""
+    i = 0
+    while True:
+        try:
+            yield winreg.EnumValue(key, i)
+        except WindowsError:
+            break
+        i += 1

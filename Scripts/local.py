@@ -12,8 +12,9 @@ import paths
 import environment
 import package
 import project
+import attributes
 
-a_location = package.attribute('site.location', 'Location')
+a_location = attributes.a_location
 
 def get_packages():
     for pkg_path in glob(join(paths.site, '*')):
