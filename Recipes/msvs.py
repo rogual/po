@@ -50,7 +50,10 @@ def init(package):
 
 @environment.executables.implement(recipe)
 def find_executables(package):
-    return [join(path, 'bin') for version, path in get_ctps()]
+    return (
+        [join(path, 'bin') for version, path in get_ctps()] +
+        [join(path, 'x86') for path in get_debuggers()]
+    )
 
 
 @environment.headers.implement(recipe)
@@ -103,6 +106,19 @@ def get_ctps():
 
     finally:
         key.Close()
+
+
+def get_debuggers():
+    """Find installed Windows Debugging Kits."""
+    try:
+        key = winreg.OpenKey(
+            winreg.HKEY_LOCAL_MACHINE,
+            r'SOFTWARE\Wow6432Node\Microsoft\Windows Kits\Installed Roots'
+        )
+        path, type = winreg.QueryValueEx(key, 'WindowsDebuggersRoot')
+        return [path]
+    except WindowsError:
+        return []
 
 
 def iterate_keys(key):

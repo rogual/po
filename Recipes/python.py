@@ -31,12 +31,12 @@ def find_executables(package):
     loc = package[a_location]
     return [loc, join(loc, 'Scripts')]
 
- 
+
 @environment.headers.implement(recipe)
 def find_headers(package):
     return [join(package[a_location], 'include')]
 
- 
+
 @environment.libraries.implement(recipe)
 def find_headers(package):
     return [join(package[a_location], 'libs')]

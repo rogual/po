@@ -8,6 +8,7 @@ import standard
 url = "http://downloads.sourceforge.net/project/" \
       "boost/boost/1.51.0/boost_1_51_0.tar.bz2"
 
+
 @simple.source('boost', "Boost C++ Libraries", url, prefix='./boost_1_51_0')
 def recipe(package):
     cwd = package[standard.a_location]
@@ -22,10 +23,8 @@ def recipe(package):
     if ret:
         raise Exception
 
-@environment.headers.implement(recipe)
-def find_headers(package):
-    return [package[standard.a_location]]
 
-@environment.libraries.implement(recipe)
-def find_libraries(package):
-    return [join(package[standard.a_location], 'stage', 'lib')]
+environment.define_paths(recipe, [
+    (environment.headers, ['']),
+    (environment.libraries, [join('stage', 'lib')])
+])

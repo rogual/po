@@ -6,7 +6,7 @@ Two kinds:
 
 Packges can implement interfaces. For example, the MSVC compiler interface
 is implemented by MSVC and Clang.
-    
+
 > po interface msvc
 Microsoft Visual C++-compatible compiler
 Implemented by:
@@ -30,3 +30,14 @@ interface = package.interface('Microsoft Visual C++-compatible compiler')
 @interface.finder(msvc_project)
 def find():
     return pkgs
+
+BOOST
+
+    boost
+        format: source
+        provenance: downloaded
+
+    > REQUISITE FOR
+        boost.signals
+            format: binary
+            provenance: compiled
