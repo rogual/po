@@ -18,7 +18,7 @@ def recipe(package):
         raise Exception
 
     ret = subprocess.call(
-        '"%s" --with-filesystem --with-thread --with-signals' % join(cwd, 'b2'),
+        '"%s" --with-filesystem --with-thread --with-signals --with-program_options' % join(cwd, 'b2'),
         cwd=cwd, shell=True)
     if ret:
         raise Exception
